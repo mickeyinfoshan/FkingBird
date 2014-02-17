@@ -39,6 +39,7 @@ var MyLayer = cc.Layer.extend({
     WIDTH:0,
     BARREL_WIDTH:0,
     BIRD_WIDTH:0,
+    MOVE_DURATION:0,
     init:function () {
 
         //////////////////////////////
@@ -55,6 +56,7 @@ var MyLayer = cc.Layer.extend({
         this.GROUND_HEIGHT = 120* size.height / 640;
         this.BARREL_WIDTH = 60;
         this.BIRD_WIDTH = 30;
+        this.MOVE_DURATION = 3;
         // add a "close" icon to exit the progress. it's an autorelease object
         var closeItem = cc.MenuItemImage.create(
             s_CloseNormal,
@@ -98,7 +100,7 @@ var MyLayer = cc.Layer.extend({
        this.schedule(this.isCrashedByUpBarrel);
        this.schedule(this.isCrashedByDownBarrel);
        this.schedule(this.isCrashedByPointLine);
-       this.schedule(this.moveGround,2);
+       this.schedule(this.moveGround,this.MOVE_DURATION);
        this.schedule(this.isCrashedByGround);
     
         cc.Director.getInstance().pause();
@@ -141,21 +143,22 @@ var MyLayer = cc.Layer.extend({
         var upBarrel = cc.Sprite.create("barrel.jpg");
         upBarrel.tag = 1;
         upBarrel.setAnchorPoint(0.5,0);
-        upBarrel.setPosition(size.width,upY);
+        upBarrel.setPosition(size.width+(this.BARREL_WIDTH/2),upY);
         var uw =upBarrel.getBoundingBox().getWidth();
         scaleSize(upBarrel,this.BARREL_WIDTH,size.height - this.GROUND_HEIGHT);                                            ///////////////////////////////////////////////////////////
         //console.log("up: "+upBarrel.getBoundingBox().getHeight());
         this.upBarrelArray.push(upBarrel);
-        var upMoveLeft = cc.MoveTo.create(2,cc.p(0,upY));
+        var upMoveLeft = cc.MoveTo.create(this.MOVE_DURATION,cc.p(0-(this.BARREL_WIDTH/2),upY));
         var upMoveSeq = cc.Sequence.create(upMoveLeft,moveDone);
         this.addChild(upBarrel);
      
 
-        var downMoveLeft = cc.MoveTo.create(2,cc.p(0,downY));
+        var downMoveLeft = cc.MoveTo.create(this.MOVE_DURATION,cc.p(0-(this.BARREL_WIDTH/2),downY));
         var downBarrel = cc.Sprite.create("barrel.jpg");
+        downBarrel.setZOrder(1);
         downBarrel.tag = 2;
         downBarrel.setAnchorPoint(0.5,1);
-        downBarrel.setPosition(size.width,downY);
+        downBarrel.setPosition(size.width+(this.BARREL_WIDTH/2),downY);
         //console.log("down: "+downBarrel.getBoundingBox().getHeight());
         this.downBarrelArray.push(downBarrel);
         scaleSize(downBarrel,this.BARREL_WIDTH,size.height - this.GROUND_HEIGHT);
@@ -168,12 +171,12 @@ var MyLayer = cc.Layer.extend({
         var pointLine = cc.Sprite.create("pointLine.png");
         pointLine.setAnchorPoint(0.5,0);
         pointLine.setVisible(false);
-        pointLine.setPosition(size.width,downY);
+        pointLine.setPosition(size.width+(this.BARREL_WIDTH/2),downY);
         pointLine.tag = 0;
         this.pointLineArray.push(pointLine);
         scaleSize(pointLine,10,2*this.WIDTH);
         this.addChild(pointLine);
-        var pointLineMoveLeft = cc.MoveTo.create(2,cc.p(0,downY));
+        var pointLineMoveLeft = cc.MoveTo.create(this.MOVE_DURATION,cc.p(0-(this.BARREL_WIDTH/2),downY));
         var pointLineMoveSeq = cc.Sequence.create(pointLineMoveLeft,moveDone);
         pointLine.runAction(pointLineMoveSeq);
 
@@ -182,6 +185,7 @@ var MyLayer = cc.Layer.extend({
         var i;
         for(i=0;i<this.upBarrelArray.length;i++){
             if(this.bird.isCrashedByUpBarrel(this.upBarrelArray[i])){
+                //alert("up");
                 this.gameOverHandler();
                 break;
             }
@@ -212,6 +216,7 @@ var MyLayer = cc.Layer.extend({
         //alert("ground");
         var size = cc.Director.getInstance().getWinSize();
         var ground = cc.Sprite.create("ground.jpg");
+        ground.setZOrder(4);
         ground.tag = 4;
         ground.setAnchorPoint(0,0);
         ground.setPosition(0,0);
@@ -222,7 +227,7 @@ var MyLayer = cc.Layer.extend({
         };
         var moveDone = cc.CallFunc.create(moveDoneSelector,this);
         var des_x = (-1) * size.width;
-        var moveLeft = cc.MoveTo.create(2,cc.p(des_x,0));
+        var moveLeft = cc.MoveTo.create(this.MOVE_DURATION,cc.p(des_x,0));
         var groundSeq = cc.Sequence.create(moveLeft,moveDone);
         ground.runAction(groundSeq);
     },
